@@ -277,6 +277,14 @@ def api_get_history():
 # Mount Static directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+@app.get("/style.css")
+def get_css():
+    return FileResponse("static/style.css", media_type="text/css")
+
+@app.get("/app.js")
+def get_js():
+    return FileResponse("static/app.js", media_type="application/javascript")
+
 @app.get("/")
 def read_root():
     return FileResponse("static/index.html")
