@@ -27,6 +27,29 @@ document.addEventListener("DOMContentLoaded", () => {
         return headers;
     }
 
+    // Safe response JSON parser
+    async function handleResponse(response) {
+        const contentType = response.headers.get("content-type") || "";
+        if (!response.ok) {
+            if (contentType.includes("application/json")) {
+                const err = await response.json();
+                throw new Error(err.detail || `HTTP Error ${response.status}`);
+            } else {
+                throw new Error(`Server returned status ${response.status}. Please check function deployment.`);
+            }
+        }
+        if (contentType.includes("application/json")) {
+            return await response.json();
+        } else {
+            const rawText = await response.text();
+            try {
+                return JSON.parse(rawText);
+            } catch (e) {
+                throw new Error(`Received non-JSON response from server.`);
+            }
+        }
+    }
+
     // --- Tab Navigation ---
     const tabBtns = document.querySelectorAll(".tab-btn");
     const tabPanes = document.querySelectorAll(".tab-pane");
@@ -100,12 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ question, mode })
             });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.detail || "Failed to fetch response");
-            }
-
-            const data = await response.json();
+            const data = await handleResponse(response);
             askOutput.innerHTML = typeof marked !== "undefined" ? marked.parse(data.answer) : data.answer;
             askResponseBox.classList.remove("hidden");
         } catch (error) {
@@ -146,12 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ topic, difficulty, num_questions: 4 })
             });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.detail || "Failed to generate quiz");
-            }
-
-            currentQuizData = await response.json();
+            currentQuizData = await handleResponse(response);
             renderQuiz(currentQuizData);
             quizContainer.classList.remove("hidden");
         } catch (error) {
@@ -163,17 +176,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderQuiz(quiz) {
         document.getElementById("quiz-title").innerText = `Quiz: ${quiz.topic}`;
-        document.getElementById("quiz-badge").innerText = quiz.difficulty.toUpperCase();
+        document.getElementById("quiz-badge").innerText = (quiz.difficulty || "medium").toUpperCase();
 
         quizQuestionsList.innerHTML = "";
 
-        quiz.questions.forEach((q, idx) => {
+        (quiz.questions || []).forEach((q, idx) => {
             const qBox = document.createElement("div");
             qBox.className = "question-block";
             qBox.dataset.qId = q.id;
 
             let optionsHtml = "";
-            q.options.forEach((opt, oIdx) => {
+            (q.options || []).forEach((opt) => {
                 optionsHtml += `
                     <div class="option-label" data-qid="${q.id}" data-opt="${escapeHtml(opt)}">
                         <i class="fa-regular fa-circle"></i>
@@ -217,9 +230,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!currentQuizData) return;
 
         let score = 0;
-        const total = currentQuizData.questions.length;
+        const total = (currentQuizData.questions || []).length;
 
-        currentQuizData.questions.forEach(q => {
+        (currentQuizData.questions || []).forEach(q => {
             const userAns = selectedAnswers[q.id];
             const correctAns = q.correct_answer;
             const expBox = document.getElementById(`explanation-${q.id}`);
@@ -245,7 +258,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Display Score Result
         document.getElementById("score-text").innerText = `${score} / ${total}`;
-        const pct = Math.round((score / total) * 100);
+        const pct = total > 0 ? Math.round((score / total) * 100) : 0;
         document.getElementById("score-progress").style.width = `${pct}%`;
         quizResultCard.classList.remove("hidden");
     });
@@ -276,12 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ topic, level })
             });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.detail || "Failed to generate learning path");
-            }
-
-            const data = await response.json();
+            const data = await handleResponse(response);
             renderLearningPath(data);
             pathContainer.classList.remove("hidden");
         } catch (error) {
@@ -361,12 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({ text, max_points: 5 })
             });
 
-            if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.detail || "Failed to summarize passage");
-            }
-
-            const data = await response.json();
+            const data = await handleResponse(response);
             renderSummary(data);
             summarizeContainer.classList.remove("hidden");
         } catch (error) {

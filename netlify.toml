@@ -3,12 +3,9 @@
   functions = "netlify/functions"
   publish = "static"
 
-[functions]
-  node_bundler = "esbuild"
-
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/api/*"
+  to = "/.netlify/functions/api"
   status = 200
 
 [[redirects]]
