@@ -1,10 +1,28 @@
 # EduGenie Deployment Guide
 
-This guide covers step-by-step instructions to deploy **EduGenie** to various free and cloud hosting platforms.
+This guide covers step-by-step instructions to deploy **EduGenie** to Netlify, Render, Vercel, Railway, or Docker.
 
 ---
 
-## 🚀 Method 1: Deploy on Render.com (Recommended - Free Tier)
+## 🌐 Method 1: Deploy on Netlify
+
+EduGenie includes built-in support for **Netlify Functions** (`netlify.toml` + `mangum` serverless adapter).
+
+### Steps:
+1. Log in to [Netlify](https://app.netlify.com).
+2. Click **Add new site** -> **Import an existing project**.
+3. Select **GitHub** and authorize access to `https://github.com/siva240905/EduGenie`.
+4. Netlify will auto-detect configuration from `netlify.toml`:
+   - **Build command**: `pip install -r requirements.txt`
+   - **Publish directory**: `static`
+   - **Functions directory**: `netlify/functions`
+5. Under **Environment variables**, set:
+   - `GEMINI_API_KEY`: *(Your Google Gemini API Key)*
+6. Click **Deploy EduGenie**. Your site will be live at `https://<your-app-name>.netlify.app`!
+
+---
+
+## 🚀 Method 2: Deploy on Render.com (Recommended Free Hosting)
 
 Render provides free hosting for FastAPI applications directly linked to your GitHub repository.
 
@@ -23,16 +41,16 @@ Render provides free hosting for FastAPI applications directly linked to your Gi
 
 ---
 
-## ⚡ Method 2: Deploy on Vercel
+## ⚡ Method 3: Deploy on Vercel
 
-1. Install Vercel CLI or go to [Vercel Dashboard](https://vercel.com).
+1. Go to [Vercel Dashboard](https://vercel.com).
 2. Import your GitHub repository `https://github.com/siva240905/EduGenie`.
 3. Add environment variable `GEMINI_API_KEY`.
 4. Deploy! Vercel will automatically use `vercel.json` and build the FastAPI app.
 
 ---
 
-## 🐳 Method 3: Containerized Deployment (Docker)
+## 🐳 Method 4: Containerized Deployment (Docker)
 
 Build and run locally or on any cloud server with Docker:
 
@@ -43,11 +61,3 @@ docker build -t edugenie:latest .
 # 2. Run container
 docker run -d -p 8000:8000 -e GEMINI_API_KEY="your_key" edugenie:latest
 ```
-
----
-
-## 🚂 Method 4: Deploy on Railway or Koyeb
-
-1. Connect GitHub repo `https://github.com/siva240905/EduGenie`.
-2. Add Environment Variable `GEMINI_API_KEY`.
-3. Set start command: `python app.py`.
