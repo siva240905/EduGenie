@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduGenie - Google Gemini Powered Educational Assistant</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Marked.js for rendering markdown answers -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Announcement Banner -->
+        <div class="announcement-banner">
+            <div class="banner-content">
+                <i class="fa-solid fa-wand-magic-sparkles banner-icon"></i>
+                <div>
+                    <strong>Welcome to EduGenie!</strong>
+                    <span>Experience AI-driven personalized learning powered by Google Gemini.</span>
+                </div>
+            </div>
+            <div class="api-key-wrapper">
+                <i class="fa-solid fa-key"></i>
+                <input type="password" id="global-api-key" placeholder="Enter Gemini API Key (Optional)...">
+                <button id="save-key-btn" class="btn-sm"><i class="fa-solid fa-check"></i> Save</button>
+            </div>
+        </div>
+
+        <!-- Header section -->
+        <header class="main-header">
+            <div class="brand">
+                <div class="logo-icon"><i class="fa-solid fa-graduation-cap"></i></div>
+                <div>
+                    <h1>EduGenie</h1>
+                    <p class="subtitle">Google Gemini Powered Educational Assistant</p>
+                </div>
+            </div>
+            <div class="tags-container">
+                <span class="badge badge-primary">Education</span>
+                <span class="badge badge-secondary">Generative AI</span>
+                <span class="badge badge-outline">FastAPI + Gemini</span>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="tab-ask">
+                <i class="fa-solid fa-comment-dots"></i> Overview / Q&A
+            </button>
+            <button class="tab-btn" data-tab="tab-quiz">
+                <i class="fa-solid fa-circle-question"></i> Quiz Generator
+            </button>
+            <button class="tab-btn" data-tab="tab-path">
+                <i class="fa-solid fa-route"></i> Learning Path
+            </button>
+            <button class="tab-btn" data-tab="tab-summarize">
+                <i class="fa-solid fa-file-contract"></i> Summarizer
+            </button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="content-body">
+            
+            <!-- TAB 1: ASK & LEARN (Q&A + CONCEPT EXPLAINER) -->
+            <section id="tab-ask" class="tab-pane active">
+                <div class="pane-header">
+                    <h2><i class="fa-solid fa-robot"></i> Ask EduGenie & Simplify Concepts</h2>
+                    <p>Ask any academic question or request a simplified explanation with analogies.</p>
+                </div>
+
+                <!-- Scenario Shortcuts -->
+                <div class="shortcuts-card">
+                    <span class="shortcuts-label"><i class="fa-solid fa-bolt"></i> Quick Scenarios:</span>
+                    <button class="chip-btn" data-scenario="ocean">🌊 Scenario 1: "Which is the largest ocean?"</button>
+                    <button class="chip-btn" data-scenario="pythagoras">📐 Scenario 2: "The Pythagoras Theorem"</button>
+                    <button class="chip-btn" data-scenario="sql">📊 Scenario 3: "SQL Learning Roadmap"</button>
+                </div>
+
+                <div class="input-card">
+                    <div class="form-group">
+                        <textarea id="ask-input" rows="4" placeholder="Ask questions or type a complex topic to simplify (e.g., 'Which is the largest ocean?' or 'How does quantum entanglement work?')..."></textarea>
+                    </div>
+                    <div class="controls-row">
+                        <div class="mode-selector">
+                            <label><input type="radio" name="ask-mode" value="explain" checked> 💡 Detailed Answer</label>
+                            <label><input type="radio" name="ask-mode" value="simplify"> 🐣 Simplify Concept</label>
+                        </div>
+                        <button id="ask-btn" class="btn btn-primary">
+                            <i class="fa-solid fa-paper-plane"></i> Ask EduGenie
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Indicator -->
+                <div id="ask-loading" class="loading-spinner hidden">
+                    <div class="spinner"></div>
+                    <p>EduGenie is crafting your response with Gemini...</p>
+                </div>
+
+                <!-- Response Box -->
+                <div id="ask-response-box" class="response-card hidden">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-lightbulb"></i> Response</h3>
+                        <button class="copy-btn" onclick="copyToClipboard('ask-output')"><i class="fa-regular fa-copy"></i> Copy</button>
+                    </div>
+                    <div id="ask-output" class="markdown-body"></div>
+                </div>
+            </section>
+
+
+            <!-- TAB 2: QUIZ GENERATOR -->
+            <section id="tab-quiz" class="tab-pane">
+                <div class="pane-header">
+                    <h2><i class="fa-solid fa-square-check"></i> Generate Interactive Quiz</h2>
+                    <p>Test your knowledge on any topic with AI-generated quizzes and instant grading.</p>
+                </div>
+
+                <div class="input-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="quiz-topic">Quiz Topic or Passage</label>
+                            <input type="text" id="quiz-topic" placeholder="e.g. The Pythagoras Theorem, Photosynthesis, Python Data Structures...">
+                        </div>
+                        <div class="form-group">
+                            <label for="quiz-difficulty">Difficulty</label>
+                            <select id="quiz-difficulty">
+                                <option value="easy">Easy</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="hard">Hard</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls-row justify-end">
+                        <button id="quiz-btn" class="btn btn-primary">
+                            <i class="fa-solid fa-wand-magic"></i> Generate Quiz
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="quiz-loading" class="loading-spinner hidden">
+                    <div class="spinner"></div>
+                    <p>Generating custom quiz questions...</p>
+                </div>
+
+                <!-- Quiz Container -->
+                <div id="quiz-container" class="quiz-card hidden">
+                    <div class="quiz-header">
+                        <h3 id="quiz-title">Quiz Topic</h3>
+                        <span id="quiz-badge" class="badge badge-primary">Medium</span>
+                    </div>
+
+                    <div id="quiz-questions-list"></div>
+
+                    <div class="quiz-footer">
+                        <button id="submit-quiz-btn" class="btn btn-success">
+                            <i class="fa-solid fa-check-double"></i> Submit Answers & Grade
+                        </button>
+                    </div>
+
+                    <div id="quiz-result-card" class="result-box hidden">
+                        <h4><i class="fa-solid fa-trophy"></i> Your Score</h4>
+                        <div class="score-display">
+                            <span id="score-text">0 / 0</span>
+                            <div class="progress-bar-bg">
+                                <div id="score-progress" class="progress-bar-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 3: LEARNING PATH GENERATOR -->
+            <section id="tab-path" class="tab-pane">
+                <div class="pane-header">
+                    <h2><i class="fa-solid fa-map-location-dot"></i> Personalized Learning Path</h2>
+                    <p>Get a structured, step-by-step roadmap with topics, timelines, and suggested projects.</p>
+                </div>
+
+                <div class="input-card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="path-topic">Subject or Skill to Master</label>
+                            <input type="text" id="path-topic" placeholder="e.g. SQL, Machine Learning, Web Development, Microeconomics...">
+                        </div>
+                        <div class="form-group">
+                            <label for="path-level">Target Target Level</label>
+                            <select id="path-level">
+                                <option value="beginner">Beginner</option>
+                                <option value="beginner to advanced" selected>Beginner to Advanced</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls-row justify-end">
+                        <button id="path-btn" class="btn btn-primary">
+                            <i class="fa-solid fa-compass"></i> Create Learning Path
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="path-loading" class="loading-spinner hidden">
+                    <div class="spinner"></div>
+                    <p>Designing custom learning path & stages...</p>
+                </div>
+
+                <!-- Learning Path Output -->
+                <div id="path-container" class="path-card hidden">
+                    <div class="path-header">
+                        <h3 id="path-title">Learning Roadmap</h3>
+                        <span id="path-time" class="badge badge-secondary"><i class="fa-regular fa-clock"></i> 4 weeks</span>
+                    </div>
+                    <p id="path-overview" class="path-overview-text"></p>
+
+                    <div id="path-stages-timeline" class="timeline"></div>
+
+                    <div id="path-tips-box" class="tips-card">
+                        <h4><i class="fa-solid fa-lightbulb"></i> Tips for Success</h4>
+                        <ul id="path-tips-list"></ul>
+                    </div>
+                </div>
+            </section>
+
+
+            <!-- TAB 4: SUMMARIZER -->
+            <section id="tab-summarize" class="tab-pane">
+                <div class="pane-header">
+                    <h2><i class="fa-solid fa-compress"></i> Educational Passage Summarizer</h2>
+                    <p>Paste long educational passages, notes, or articles to extract key takeaways and definitions.</p>
+                </div>
+
+                <div class="input-card">
+                    <div class="form-group">
+                        <textarea id="summarize-input" rows="6" placeholder="Paste educational article, lecture notes, or chapter text here..."></textarea>
+                    </div>
+                    <div class="controls-row justify-end">
+                        <button id="summarize-btn" class="btn btn-primary">
+                            <i class="fa-solid fa-file-arrow-up"></i> Summarize Text
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="summarize-loading" class="loading-spinner hidden">
+                    <div class="spinner"></div>
+                    <p>Analyzing and summarizing passage...</p>
+                </div>
+
+                <!-- Summary Response Container -->
+                <div id="summarize-container" class="response-card hidden">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-list-check"></i> Summary Results</h3>
+                    </div>
+                    <div class="summary-body">
+                        <div class="summary-section">
+                            <h4>Overview</h4>
+                            <p id="summary-overview-text"></p>
+                        </div>
+
+                        <div class="summary-section">
+                            <h4>Key Takeaways</h4>
+                            <ul id="summary-takeaways-list" class="styled-list"></ul>
+                        </div>
+
+                        <div id="summary-terms-section" class="summary-section">
+                            <h4>Important Terms & Definitions</h4>
+                            <div id="summary-terms-grid" class="terms-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>EduGenie &copy; 2026 | Built with FastAPI & Google Gemini API | Designed for Learners Everywhere</p>
+        </footer>
+    </div>
+
+    <!-- App JavaScript -->
+    <script src="/static/app.js"></script>
+</body>
+</html>
