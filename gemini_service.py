@@ -6,17 +6,17 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Check available SDKs
+# Check available SDKs safely
 USE_GENAI_SDK = False
 try:
     from google import genai
     from google.genai import types
     USE_GENAI_SDK = True
-except ImportError:
+except Exception:
     try:
         import google.generativeai as legacy_genai
         USE_GENAI_SDK = False
-    except ImportError:
+    except Exception:
         pass
 
 MODEL_NAME = "gemini-2.5-flash"
@@ -124,7 +124,6 @@ Do NOT include any extra conversational text outside the JSON object.
         data = json.loads(cleaned)
         return data
     except Exception as e:
-        # Fallback regex extraction if JSON parsing fails
         match = re.search(r'\{.*\}', raw_response, re.DOTALL)
         if match:
             return json.loads(match.group(0))

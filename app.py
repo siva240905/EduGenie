@@ -26,8 +26,6 @@ async def normalize_serverless_path(request: Request, call_next):
         else:
             path = sub_path
         request.scope["path"] = path
-    elif path in ["/ask", "/quiz", "/learning-path", "/summarize", "/history"]:
-        request.scope["path"] = "/api" + path
 
     response = await call_next(request)
     return response
@@ -148,11 +146,11 @@ MOCK_PATH = {
 
 
 @app.post("/api/ask")
+@app.post("/ask")
 def api_ask_question(req: AskRequest, x_gemini_api_key: Optional[str] = Header(None)):
     api_key = resolve_api_key(x_gemini_api_key)
     
     if not api_key:
-        # Check mock fallback
         q_lower = req.question.strip().lower()
         if q_lower in MOCK_QA:
             answer = MOCK_QA[q_lower]
@@ -177,6 +175,7 @@ def api_ask_question(req: AskRequest, x_gemini_api_key: Optional[str] = Header(N
 
 
 @app.post("/api/quiz")
+@app.post("/quiz")
 def api_generate_quiz(req: QuizRequest, x_gemini_api_key: Optional[str] = Header(None)):
     api_key = resolve_api_key(x_gemini_api_key)
     
@@ -219,6 +218,7 @@ def api_generate_quiz(req: QuizRequest, x_gemini_api_key: Optional[str] = Header
 
 
 @app.post("/api/learning-path")
+@app.post("/learning-path")
 def api_generate_learning_path(req: LearningPathRequest, x_gemini_api_key: Optional[str] = Header(None)):
     api_key = resolve_api_key(x_gemini_api_key)
     
@@ -268,11 +268,11 @@ def api_generate_learning_path(req: LearningPathRequest, x_gemini_api_key: Optio
 
 
 @app.post("/api/summarize")
+@app.post("/summarize")
 def api_summarize_text(req: SummarizeRequest, x_gemini_api_key: Optional[str] = Header(None)):
     api_key = resolve_api_key(x_gemini_api_key)
     
     if not api_key:
-        # Simple local summary generator for demo mode
         text_lines = [line.strip() for line in req.text.split(".") if line.strip()]
         summary_overview = req.text[:200] + "..." if len(req.text) > 200 else req.text
         key_points = text_lines[:req.max_points] if text_lines else ["Educational passage provided."]
@@ -299,6 +299,7 @@ def api_summarize_text(req: SummarizeRequest, x_gemini_api_key: Optional[str] = 
 
 
 @app.get("/api/history")
+@app.get("/history")
 def api_get_history():
     try:
         return db.get_qa_history()
