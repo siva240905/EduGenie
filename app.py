@@ -1,7 +1,7 @@
 import os
 import uvicorn
 from typing import Optional, List, Dict, Any
-from fastapi import FastAPI, HTTPException, Header, Query
+from fastapi import FastAPI, HTTPException, Header, Query, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field
@@ -14,6 +14,23 @@ app = FastAPI(
     description="Google Gemini Powered Educational Assistant API",
     version="1.0.0"
 )
+
+# Netlify & Serverless path normalization middleware
+@app.middleware("http")
+async def normalize_serverless_path(request: Request, call_next):
+    path = request.scope.get("path", "")
+    if path.startswith("/.netlify/functions/api"):
+        sub_path = path[len("/.netlify/functions/api"):]
+        if not sub_path.startswith("/api") and sub_path != "":
+            path = "/api" + sub_path
+        else:
+            path = sub_path
+        request.scope["path"] = path
+    elif path in ["/ask", "/quiz", "/learning-path", "/summarize", "/history"]:
+        request.scope["path"] = "/api" + path
+
+    response = await call_next(request)
+    return response
 
 # Ensure static folder exists
 os.makedirs("static", exist_ok=True)
@@ -152,7 +169,10 @@ def api_ask_question(req: AskRequest, x_gemini_api_key: Optional[str] = Header(N
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Gemini API Error: {str(e)}")
 
-    db.save_qa(req.question, answer, req.mode)
+    try:
+        db.save_qa(req.question, answer, req.mode)
+    except Exception:
+        pass
     return {"question": req.question, "answer": answer, "mode": req.mode}
 
 
@@ -191,7 +211,10 @@ def api_generate_quiz(req: QuizRequest, x_gemini_api_key: Optional[str] = Header
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Gemini API Quiz Error: {str(e)}")
 
-    db.save_quiz(req.topic, quiz_data)
+    try:
+        db.save_quiz(req.topic, quiz_data)
+    except Exception:
+        pass
     return quiz_data
 
 
@@ -237,7 +260,10 @@ def api_generate_learning_path(req: LearningPathRequest, x_gemini_api_key: Optio
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Gemini API Learning Path Error: {str(e)}")
 
-    db.save_learning_path(req.topic, path_data)
+    try:
+        db.save_learning_path(req.topic, path_data)
+    except Exception:
+        pass
     return path_data
 
 
@@ -265,13 +291,19 @@ def api_summarize_text(req: SummarizeRequest, x_gemini_api_key: Optional[str] = 
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Gemini API Summarizer Error: {str(e)}")
 
-    db.save_summary(req.text, summary_data.get("summary", ""), summary_data.get("key_takeaways", []))
+    try:
+        db.save_summary(req.text, summary_data.get("summary", ""), summary_data.get("key_takeaways", []))
+    except Exception:
+        pass
     return summary_data
 
 
 @app.get("/api/history")
 def api_get_history():
-    return db.get_qa_history()
+    try:
+        return db.get_qa_history()
+    except Exception:
+        return []
 
 
 # Mount Static directory
